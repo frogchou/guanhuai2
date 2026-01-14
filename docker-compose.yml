@@ -10,7 +10,7 @@ services:
       - ./backend:/app
       - audio_data:/app/static/audio
     ports:
-      - "8001:8000"
+      - "8002:8000"
     environment:
       - DATABASE_URL=mysql+aiomysql://user:password@mysql/voice_chat
       - REDIS_URL=redis://redis:6379/0
