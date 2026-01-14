@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, AliasChoices
 from typing import Optional, Dict
 from datetime import datetime
 
@@ -28,7 +28,7 @@ class TokenData(BaseModel):
 # Persona Schemas
 class PersonaBase(BaseModel):
     name: str
-    relationship: str
+    relationship_type: str = Field(validation_alias=AliasChoices("relationship", "relationship_type"), serialization_alias="relationship")
     user_called_by: str
     persona_called_by: str
     legal_confirmed: bool

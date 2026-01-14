@@ -1,0 +1,45 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    // 添加测试配置 使用uvicorn
+    "version": "0.2.0",
+    "configurations": [
+        
+
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Uvicorn",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.main:app",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8002",
+                "--reload"
+            ],
+            "cwd": "${workspaceFolder}/backend",
+            "env": {
+                "DATABASE_URL": "mysql+aiomysql://user:password@127.0.0.1:3307/voice_chat",
+                "REDIS_URL": "redis://127.0.0.1:6380/0",
+                "SECRET_KEY": "dev_secret_key_change_me",
+                "ALGORITHM": "HS256",
+                "ACCESS_TOKEN_EXPIRE_MINUTES": "1440",
+                "OPENAI_API_KEY": "mock",
+                "INDEXTTS_BASE_URL": "http://mock-indextts"
+            },
+            "python": "/home/wzg/pyenv/3.10/bin/python",
+            "justMyCode": false
+        }
+
+    ]
+}

@@ -89,9 +89,12 @@ async def process_voice_message(
             output_filename = f"reply_{asst_msg.id}_{uuid.uuid4()}.wav"
             output_path = os.path.join("static/audio", output_filename)
             
+            # Use voice_file_path if available (absolute path for IndexTTS), otherwise fallback
+            voice_ref = persona.voice_file_path if persona.voice_file_path else (persona.voice_id or "default")
+            
             success = await tts.generate_audio(
                 text=reply_text, 
-                voice_id=persona.voice_id or "default", 
+                voice_id=voice_ref, 
                 output_path=output_path
             )
             

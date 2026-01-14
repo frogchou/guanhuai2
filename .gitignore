@@ -5,5 +5,7 @@ __pycache__/
 node_modules/
 dist/
 .DS_Store
-static/audio/*.wav
-!static/audio/.gitkeep
+backend/static/*
+backend/static/audio/*.wav
+!backend/static/audio/.gitkeep
+

@@ -44,28 +44,43 @@ class IndexTTSClient(TTSProvider):
         self.client = httpx.AsyncClient(timeout=30.0)
 
     async def clone_voice(self, audio_path: str, name: str) -> str:
-        # Pseudo-implementation based on typical IndexTTS/Cloning APIs
-        # In a real scenario, check the specific API docs
+        # Implements upload to IndexTTS to get absolute server path
         try:
-            files = {'file': open(audio_path, 'rb')}
-            response = await self.client.post(f"{self.base_url}/api/v1/voice/clone", files=files, data={"name": name})
+            # We need to open the file again
+            with open(audio_path, 'rb') as f:
+                files = {'file': f}
+                # Use /upload_audio endpoint as per docs
+                response = await self.client.post(f"{self.base_url}/upload_audio", files=files)
+            
             response.raise_for_status()
-            return response.json().get("voice_id")
+            data = response.json()
+            return data.get("absolute_path", "")
         except Exception as e:
-            logger.error(f"IndexTTS Clone Error: {e}")
-            return "mock-voice-id-fallback"
+            logger.error(f"IndexTTS Upload Error: {e}")
+            # In case of error, we might return empty or raise
+            raise e
 
     async def generate_audio(self, text: str, voice_id: str, output_path: str) -> bool:
         try:
-            payload = {"text": text, "voice_id": voice_id}
-            response = await self.client.post(f"{self.base_url}/api/v1/tts", json=payload)
-            response.raise_for_status()
+            # voice_id here is expected to be the absolute_path
+            payload = {
+                "text": text, 
+                "prompt_audio_path": voice_id,
+                "emotion": {"mode": 0}
+            }
+            response = await self.client.post(f"{self.base_url}/tts", json=payload, timeout=60.0)
+            
+            if response.status_code != 200:
+                logger.error(f"IndexTTS Gen Error: {response.text}")
+                generate_silent_wav(output_path)
+                return False
+                
             with open(output_path, "wb") as f:
                 f.write(response.content)
             return True
         except Exception as e:
             logger.error(f"IndexTTS Gen Error: {e}")
-            # Fallback to mock for stability even in 'real' mode if external fails
+            # Fallback to mock for stability
             generate_silent_wav(output_path)
             return False
 

@@ -1,5 +1,7 @@
 import asyncio
-from env import target_metadata
+import sys
+import os
+sys.path.append(os.getcwd())
 from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import settings
 from app.models.all_models import Base

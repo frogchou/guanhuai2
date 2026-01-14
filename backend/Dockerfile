@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/python:3.10-slim
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ COPY pyproject.toml .
 # For this generated repo, I will write a requirements.txt for stability.
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 COPY . .
 

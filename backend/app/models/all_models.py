@@ -28,12 +28,13 @@ class Persona(Base):
     
     name: Mapped[str] = mapped_column(String(100))
     avatar_url: Mapped[Optional[str]] = mapped_column(String(255))
-    relationship: Mapped[str] = mapped_column(String(50)) # e.g. "Mother", "Friend"
+    relationship_type: Mapped[str] = mapped_column(String(50)) # e.g. "Mother", "Friend"
     user_called_by: Mapped[str] = mapped_column(String(50)) # How persona calls user e.g. "Sweetie"
     persona_called_by: Mapped[str] = mapped_column(String(50)) # How user calls persona e.g. "Mom"
     
     # Voice Profile
     voice_sample_url: Mapped[Optional[str]] = mapped_column(String(255))
+    voice_file_path: Mapped[Optional[str]] = mapped_column(String(512)) # Absolute path from TTS service
     voice_id: Mapped[Optional[str]] = mapped_column(String(100)) # ID from IndexTTS
     voice_model_status: Mapped[str] = mapped_column(String(20), default="pending") # pending, ready, failed
     

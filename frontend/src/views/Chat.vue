@@ -15,6 +15,7 @@ const isRecording = ref(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const audioChunks = ref<Blob[]>([]);
 const pollingInterval = ref<any>(null);
+const createdBlobUrls = new Set<string>();
 
 const chatContainer = ref<HTMLElement | null>(null);
 
@@ -67,10 +68,13 @@ const stopRecording = () => {
     formData.append('file', audioBlob, 'voice.wav');
     
     // Optimistic UI: Add user message immediately
+    const blobUrl = URL.createObjectURL(audioBlob);
+    createdBlobUrls.add(blobUrl);
+    
     messages.value.push({
       role: 'user',
       status: 'completed',
-      audio_url: URL.createObjectURL(audioBlob)
+      audio_url: blobUrl
     });
     scrollToBottom();
     
@@ -98,34 +102,63 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearInterval(pollingInterval.value);
+  createdBlobUrls.forEach(url => URL.revokeObjectURL(url));
+  createdBlobUrls.clear();
 });
 </script>
 
 <template>
   <div class="chat-layout">
-    <van-nav-bar title="Chat" left-arrow @click-left="router.back()" fixed placeholder />
+    <van-nav-bar 
+      title="Chat" 
+      left-arrow 
+      @click-left="router.back()" 
+      fixed 
+      placeholder 
+      class="wechat-nav"
+    >
+      <template #right>
+        <van-icon name="ellipsis" size="20" color="#000" />
+      </template>
+    </van-nav-bar>
     
     <div class="messages" ref="chatContainer">
       <div v-for="msg in messages" :key="msg.id" :class="['message-row', msg.role]">
-        <div class="bubble">
-          <div v-if="msg.content_text" class="text-content">{{ msg.content_text }}</div>
-          
-          <div v-if="msg.audio_url" class="audio-player">
-            <audio controls :src="msg.audio_url"></audio>
-          </div>
-          
+        <!-- Avatar -->
+        <div class="avatar-container" v-if="msg.role === 'assistant'">
+          <div class="avatar assistant-avatar">A</div>
+        </div>
+        
+        <div class="content-container">
+          <!-- Tone Analysis Tag -->
           <div v-if="msg.analysis && msg.role === 'assistant'" class="meta-tag">
              Mood: {{ msg.analysis.tone }}
           </div>
           
-          <div v-if="msg.status === 'processing'" class="loading-indicator">
-            Thinking...
+          <div class="bubble">
+            <div v-if="msg.content_text" class="text-content">{{ msg.content_text }}</div>
+            
+            <div v-if="msg.audio_url" class="audio-player">
+              <audio controls :src="msg.audio_url" class="wechat-audio"></audio>
+            </div>
+            
+            <div v-if="msg.status === 'processing'" class="loading-indicator">
+              <van-loading type="spinner" size="16px" />
+            </div>
           </div>
+        </div>
+
+        <div class="avatar-container" v-if="msg.role === 'user'">
+          <div class="avatar user-avatar">Me</div>
         </div>
       </div>
     </div>
     
     <div class="input-area">
+      <div class="tool-icon">
+        <van-icon name="volume-o" size="28" />
+      </div>
+      
       <div 
         class="record-btn" 
         :class="{ active: isRecording }"
@@ -136,6 +169,14 @@ onUnmounted(() => {
       >
         {{ isRecording ? 'Release to Send' : 'Hold to Speak' }}
       </div>
+      
+      <div class="tool-icon">
+        <van-icon name="smile-o" size="28" />
+      </div>
+      
+      <div class="tool-icon">
+        <van-icon name="add-o" size="28" />
+      </div>
     </div>
   </div>
 </template>
@@ -145,63 +186,181 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-color: #ededed;
 }
+
+.wechat-nav {
+  background-color: #ededed;
+  --van-nav-bar-title-text-color: #000;
+  --van-nav-bar-title-font-weight: 600;
+  --van-nav-bar-icon-color: #000;
+}
+
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 10px;
-  background: #f2f2f2;
+  padding: 16px;
+  background: #ededed;
 }
+
 .message-row {
   display: flex;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  align-items: flex-start;
 }
+
 .message-row.user {
   justify-content: flex-end;
 }
+
 .message-row.assistant {
   justify-content: flex-start;
 }
-.bubble {
-  max-width: 80%;
-  padding: 10px;
-  border-radius: 10px;
-  background: white;
+
+.avatar-container {
+  flex-shrink: 0;
 }
-.user .bubble {
-  background: #95ec69;
-}
-.input-area {
-  height: 80px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-top: 1px solid #ddd;
-}
-.record-btn {
-  width: 80%;
-  height: 50px;
-  border-radius: 25px;
-  background: #f2f2f2;
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  font-size: 14px;
+}
+
+.assistant-avatar {
+  background-color: #fff;
+  color: #333;
+  margin-right: 10px;
+}
+
+.user-avatar {
+  background-color: #2ba245; /* WeChat green */
+  color: #fff;
+  margin-left: 10px;
+}
+
+.content-container {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.assistant .content-container {
+  align-items: flex-start;
+}
+
+.user .content-container {
+  align-items: flex-end;
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: 4px;
+  position: relative;
+  font-size: 16px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.assistant .bubble {
+  background: white;
+  border: 1px solid #e5e5e5;
+}
+
+.assistant .bubble::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-left: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+  transform: rotate(45deg);
+}
+
+.user .bubble {
+  background: #95ec69;
+  border: 1px solid #8ad963;
+}
+
+.user .bubble::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  background: #95ec69;
+  border-right: 1px solid #8ad963;
+  border-top: 1px solid #8ad963;
+  transform: rotate(45deg);
+}
+
+.text-content {
+  color: #191919;
+}
+
+.wechat-audio {
+  height: 30px;
+  max-width: 200px;
+}
+
+.input-area {
+  min-height: 56px;
+  background: #f7f7f7;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #dcdcdc;
+  padding: 8px 10px;
+  /* Safe area for iPhone X+ */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tool-icon {
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  color: #191919;
+}
+
+.record-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 4px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 16px;
+  color: #191919;
   user-select: none;
   cursor: pointer;
+  margin: 0 10px;
+  border: 1px solid #e5e5e5;
 }
+
 .record-btn.active {
-  background: #ddd;
-  color: #333;
+  background: #dcdcdc;
+  color: #555;
 }
+
 .meta-tag {
-  font-size: 0.7em;
-  color: #666;
-  margin-top: 5px;
-  background: #eee;
-  padding: 2px 5px;
-  border-radius: 4px;
-  display: inline-block;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  padding: 5px;
 }
 </style>

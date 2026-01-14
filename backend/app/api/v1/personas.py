@@ -53,7 +53,8 @@ async def upload_voice_sample(
     if not persona:
         raise HTTPException(status_code=404, detail="Persona not found")
 
-    # Save file
+    # Save file locally first (for UI playback if needed)
+    os.makedirs("static/audio", exist_ok=True)
     file_ext = file.filename.split(".")[-1]
     filename = f"voice_sample_{persona.id}_{uuid.uuid4()}.{file_ext}"
     file_path = os.path.join("static/audio", filename)
@@ -65,12 +66,51 @@ async def upload_voice_sample(
     persona.voice_model_status = "processing"
     await db.commit()
     
-    # Trigger Cloning (Async in real world, awaiting here for simplicity or using bg task)
-    tts_provider = get_tts_provider()
-    voice_id = await tts_provider.clone_voice(file_path, persona.name)
+    try:
+        # Upload to TTS Service
+        tts_provider = get_tts_provider()
+        # This now returns the absolute path on the TTS server
+        absolute_path = await tts_provider.clone_voice(file_path, persona.name)
+        
+        persona.voice_file_path = absolute_path
+        persona.voice_id = "index_tts_ref" # We use file path now
+        persona.voice_model_status = "ready"
+    except Exception as e:
+        persona.voice_model_status = "failed"
+        # We still keep the local file
+        print(f"TTS Upload Failed: {e}")
+        
+    await db.commit()
+    await db.refresh(persona)
     
-    persona.voice_id = voice_id
-    persona.voice_model_status = "ready"
+    return persona
+
+@router.post("/{persona_id}/avatar", response_model=PersonaResponse)
+async def upload_avatar(
+    persona_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Verify ownership
+    result = await db.execute(select(Persona).where(Persona.id == persona_id, Persona.creator_id == current_user.id))
+    persona = result.scalar_one_or_none()
+    if not persona:
+        raise HTTPException(status_code=404, detail="Persona not found")
+
+    # Save file
+    os.makedirs("static/images", exist_ok=True)
+    file_ext = file.filename.split(".")[-1]
+    if file_ext.lower() not in ['jpg', 'jpeg', 'png', 'webp']:
+        raise HTTPException(status_code=400, detail="Invalid image format")
+        
+    filename = f"avatar_{persona.id}_{uuid.uuid4()}.{file_ext}"
+    file_path = os.path.join("static/images", filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    persona.avatar_url = f"/static/images/{filename}"
     await db.commit()
     await db.refresh(persona)
     

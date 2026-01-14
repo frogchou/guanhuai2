@@ -5,12 +5,12 @@ services:
     build: ./backend
     container_name: voice_chat_backend
     restart: always
-    command: sh -c "alembic upgrade head && python -m app.main"
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     volumes:
       - ./backend:/app
       - audio_data:/app/static/audio
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - DATABASE_URL=mysql+aiomysql://user:password@mysql/voice_chat
       - REDIS_URL=redis://redis:6379/0
@@ -32,12 +32,12 @@ services:
     container_name: voice_chat_frontend
     restart: always
     ports:
-      - "80:80"
+      - "8081:80"
     depends_on:
       - backend
 
   mysql:
-    image: mysql:8.0
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/mysql:8.0
     container_name: voice_chat_db
     restart: always
     environment:
@@ -46,7 +46,7 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -55,11 +55,11 @@ services:
       retries: 10
 
   redis:
-    image: redis:7-alpine
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/redis:latest
     container_name: voice_chat_redis
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
 
