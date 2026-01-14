@@ -36,7 +36,7 @@
                 "ACCESS_TOKEN_EXPIRE_MINUTES": "1440",
                 "INDEXTTS_BASE_URL": "http://192.168.2.252:8000"
             },
-            "python": "/root/miniconda3/envs/py3.10/bin/python",
+            "python": "/home/wzg/pyenv/3.10/bin/python",
             "justMyCode": false
         }
 

@@ -58,7 +58,10 @@ const fetchPersona = async () => {
 const startRecording = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder.value = new MediaRecorder(stream);
+    const preferredMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+    mediaRecorder.value = preferredMime ? new MediaRecorder(stream, { mimeType: preferredMime }) : new MediaRecorder(stream);
     audioChunks.value = [];
     
     mediaRecorder.value.ondataavailable = (event) => {
@@ -76,9 +79,10 @@ const stopRecording = () => {
   if (!mediaRecorder.value) return;
   
   mediaRecorder.value.onstop = async () => {
-    const audioBlob = new Blob(audioChunks.value, { type: 'audio/wav' });
+    const useWebm = mediaRecorder.value && mediaRecorder.value.mimeType && mediaRecorder.value.mimeType.includes('webm');
+    const audioBlob = new Blob(audioChunks.value, { type: useWebm ? 'audio/webm' : 'audio/wav' });
     const formData = new FormData();
-    formData.append('file', audioBlob, 'voice.wav');
+    formData.append('file', audioBlob, useWebm ? 'voice.webm' : 'voice.wav');
     
     // Optimistic UI: Add user message immediately
     const blobUrl = URL.createObjectURL(audioBlob);

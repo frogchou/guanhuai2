@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     REDIS_URL: str
     
     OPENAI_API_KEY: str = "mock"
+    OPENAI_BASE_URL: str = "http://d.frgochou.com/v1"
+    OPENAI_PROXY: str = ""
+    OPENAI_MODEL: str = "gpt-3.5-turbo-1106"
     INDEXTTS_BASE_URL: str = "http://192.168.2.252:8000"
     
     # Security & Compliance

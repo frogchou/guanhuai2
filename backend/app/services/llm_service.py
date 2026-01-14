@@ -22,12 +22,20 @@ class MockLLMProvider(LLMProvider):
 class OpenAILLMProvider(LLMProvider):
     def __init__(self):
         from openai import AsyncOpenAI
-        self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        import httpx
+        
+        http_client = httpx.AsyncClient(proxy=settings.OPENAI_PROXY) if settings.OPENAI_PROXY else None
+        
+        self.client = AsyncOpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            base_url=settings.OPENAI_BASE_URL,
+            http_client=http_client
+        )
 
     async def generate_response(self, system_prompt: str, user_text: str) -> dict:
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-3.5-turbo-1106",
+                model=settings.OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_text}
