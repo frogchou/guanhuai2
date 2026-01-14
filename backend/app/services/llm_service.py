@@ -42,6 +42,11 @@ class OpenAILLMProvider(LLMProvider):
             return {"tone": "neutral", "content": "I'm having trouble thinking right now, but I'm here."}
 
 def get_llm_provider() -> LLMProvider:
-    if settings.OPENAI_API_KEY == "mock":
+    api_key = settings.OPENAI_API_KEY
+    if not api_key or api_key == "mock":
+        logger.info("LLM Provider: Mock (API Key is missing or 'mock')")
         return MockLLMProvider()
+    
+    masked_key = api_key[:8] + "..." if len(api_key) > 8 else "..."
+    logger.info(f"LLM Provider: OpenAI (API Key starts with {masked_key})")
     return OpenAILLMProvider()

@@ -34,6 +34,9 @@ class OpenAIWhisperProvider(STTProvider):
             return "Error transcribing audio."
 
 def get_stt_provider() -> STTProvider:
-    if settings.OPENAI_API_KEY == "mock":
+    api_key = settings.OPENAI_API_KEY
+    if not api_key or api_key == "mock":
+        logger.info("STT Provider: Mock")
         return MockSTTProvider()
+    logger.info("STT Provider: OpenAI Whisper")
     return OpenAIWhisperProvider()

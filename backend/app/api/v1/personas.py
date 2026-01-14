@@ -73,7 +73,7 @@ async def upload_voice_sample(
         absolute_path = await tts_provider.clone_voice(file_path, persona.name)
         
         persona.voice_file_path = absolute_path
-        persona.voice_id = "index_tts_ref" # We use file path now
+        persona.voice_id = absolute_path # Use absolute path as voice_id
         persona.voice_model_status = "ready"
     except Exception as e:
         persona.voice_model_status = "failed"

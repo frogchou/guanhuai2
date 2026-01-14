@@ -53,7 +53,7 @@ async def process_voice_message(
             # Build Prompt
             system_prompt = f"""
             You are roleplaying as {persona.name}.
-            Your relationship to the user: {persona.relationship}.
+            Your relationship to the user: {persona.relationship_type}.
             The user calls you: {persona.persona_called_by}.
             You call the user: {persona.user_called_by}.
             
@@ -90,7 +90,17 @@ async def process_voice_message(
             output_path = os.path.join("static/audio", output_filename)
             
             # Use voice_file_path if available (absolute path for IndexTTS), otherwise fallback
+            # Priority: 
+            # 1. persona.voice_file_path (Uploaded via our new API)
+            # 2. persona.voice_id (Legacy or directly set ID)
+            # 3. "default" (Fallback)
             voice_ref = persona.voice_file_path if persona.voice_file_path else (persona.voice_id or "default")
+            
+            # If we are using IndexTTS (implied by non-mock URL in config), voice_ref MUST be a path or valid ID
+            # If it's "mock-voice-id-123" or "default", and we are trying to use real IndexTTS, it will fail.
+            # But here we just pass what we have.
+            
+            logger.info(f"Generating audio via {type(tts).__name__} | Voice Ref: {voice_ref} | Text: {reply_text[:20]}...")
             
             success = await tts.generate_audio(
                 text=reply_text, 
