@@ -17,52 +17,65 @@ const voiceFile = ref([]);
 const avatarFile = ref([]);
 const auth = useAuthStore();
 const router = useRouter();
+const isSubmitting = ref(false);
+const isVoiceUploading = ref(false);
+const voiceUploadStatus = ref<'idle' | 'uploading' | 'success' | 'error'>('idle');
 
 const onClickLeft = () => {
   router.push('/contacts');
 };
 
 const onSubmit = async () => {
-  if (!form.value.legal_confirmed) {
-    showToast('Please confirm legal rights');
+  if (isSubmitting.value || isVoiceUploading.value) {
     return;
   }
-  
+  if (!form.value.legal_confirmed) {
+    showToast('请先确认您拥有合法使用该声音的权利');
+    return;
+  }
+  isSubmitting.value = true;
+  voiceUploadStatus.value = 'idle';
   try {
-    // 1. Create Persona
     const res = await axios.post('/api/v1/personas/', form.value, {
       headers: { Authorization: `Bearer ${auth.token}` }
     });
     const personaId = res.data.id;
-    
-    // 2. Upload Voice if exists
     if (voiceFile.value.length > 0) {
+      isVoiceUploading.value = true;
+      voiceUploadStatus.value = 'uploading';
       const formData = new FormData();
       formData.append('file', voiceFile.value[0].file);
-      await axios.post(`/api/v1/personas/${personaId}/voice`, formData, {
-        headers: { 
-          Authorization: `Bearer ${auth.token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      try {
+        await axios.post(`/api/v1/personas/${personaId}/voice`, formData, {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        voiceUploadStatus.value = 'success';
+      } catch (e) {
+        voiceUploadStatus.value = 'error';
+        throw e;
+      } finally {
+        isVoiceUploading.value = false;
+      }
     }
-
-    // 3. Upload Avatar if exists
     if (avatarFile.value.length > 0) {
       const formData = new FormData();
       formData.append('file', avatarFile.value[0].file);
       await axios.post(`/api/v1/personas/${personaId}/avatar`, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${auth.token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
     }
-    
-    showToast('Created successfully');
-    router.push('/');
+    showToast('创建成功');
   } catch (e) {
-    showToast('Failed to create');
+    showToast('创建失败');
+  } finally {
+    isSubmitting.value = false;
+    isVoiceUploading.value = false;
   }
 };
 </script>
@@ -70,7 +83,7 @@ const onSubmit = async () => {
 <template>
   <div class="page-container">
     <van-nav-bar 
-      title="Add Contact" 
+      title="添加联系人" 
       left-arrow 
       @click-left="onClickLeft" 
       class="wechat-nav"
@@ -78,52 +91,52 @@ const onSubmit = async () => {
     />
     
     <van-form @submit="onSubmit" class="create-form">
-      <div class="form-group-title">Avatar</div>
+      <div class="form-group-title">头像</div>
       <div class="avatar-uploader-container">
          <van-uploader v-model="avatarFile" max-count="1" preview-size="80px" />
       </div>
 
-      <div class="form-group-title">Basic Info</div>
+      <div class="form-group-title">基本信息</div>
       <van-cell-group :border="false" class="wechat-cell-group">
 
         <van-field 
           v-model="form.name" 
           name="Name" 
-          label="Name" 
-          placeholder="e.g. Grandma" 
+          label="姓名" 
+          placeholder="例如：奶奶" 
           :rules="[{ required: true }]" 
           input-align="right"
         />
         <van-field 
           v-model="form.relationship" 
           name="Relation" 
-          label="Relation" 
-          placeholder="e.g. Grandmother" 
+          label="关系" 
+          placeholder="例如：外婆" 
           input-align="right"
         />
       </van-cell-group>
 
-      <div class="form-group-title">Interaction Settings</div>
+      <div class="form-group-title">互动设置</div>
       <van-cell-group :border="false" class="wechat-cell-group">
         <van-field 
           v-model="form.persona_called_by" 
           name="CalledBy" 
-          label="Calls you" 
-          placeholder="e.g. Sweetie" 
+          label="称呼你" 
+          placeholder="例如：小宝贝" 
           input-align="right"
         />
         <van-field 
           v-model="form.user_called_by" 
           name="CallsUser" 
-          label="You call her" 
-          placeholder="e.g. Grandma" 
+          label="你称呼她" 
+          placeholder="例如：奶奶" 
           input-align="right"
         />
       </van-cell-group>
       
-      <div class="form-group-title">Voice Clone</div>
+      <div class="form-group-title">声音克隆</div>
       <van-cell-group :border="false" class="wechat-cell-group">
-        <van-field name="uploader" label="Voice Sample" input-align="right">
+        <van-field name="uploader" label="声音样本" input-align="right">
           <template #input>
             <van-uploader 
               v-model="voiceFile" 
@@ -132,21 +145,38 @@ const onSubmit = async () => {
               result-type="file"
               :preview-image="false"
             >
-              <van-button icon="music-o" size="small" type="default">Select Audio</van-button>
+              <van-button icon="music-o" size="small" type="default">选择音频</van-button>
             </van-uploader>
           </template>
         </van-field>
+        <div class="upload-status" v-if="voiceUploadStatus === 'uploading'">
+          正在上传声音样本...
+        </div>
+        <div class="upload-status success" v-else-if="voiceUploadStatus === 'success'">
+          声音样本已上传。
+        </div>
+        <div class="upload-status error" v-else-if="voiceUploadStatus === 'error'">
+          声音上传失败，请重试。
+        </div>
       </van-cell-group>
       
       <div style="padding: 20px 16px;">
         <van-checkbox v-model="form.legal_confirmed" shape="square" icon-size="16px">
-          <span style="font-size: 13px; color: #666;">I confirm I have the legal rights to clone this voice.</span>
+          <span style="font-size: 13px; color: #666;">我确认已获得合法授权，可以克隆该声音。</span>
         </van-checkbox>
       </div>
 
       <div style="margin: 16px;">
-        <van-button round block type="primary" native-type="submit" class="wechat-btn">
-          Complete
+        <van-button 
+          round 
+          block 
+          type="primary" 
+          native-type="submit" 
+          class="wechat-btn"
+          :loading="isSubmitting"
+          :disabled="isSubmitting || isVoiceUploading"
+        >
+          完成
         </van-button>
       </div>
     </van-form>

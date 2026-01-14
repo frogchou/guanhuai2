@@ -23,7 +23,7 @@ onMounted(fetchPersonas);
 </script>
 
 <template>
-  <van-nav-bar title="Contacts" right-text="Add" @click-right="router.push('/personas/new')" />
+  <van-nav-bar title="通讯录" right-text="添加" @click-right="router.push('/personas/new')" />
   
   <van-list>
     <van-cell 

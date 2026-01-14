@@ -9,3 +9,4 @@ backend/static/*
 backend/static/audio/*.wav
 !backend/static/audio/.gitkeep
 
+.vscode/launch.json

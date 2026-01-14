@@ -12,10 +12,10 @@ const router = useRouter();
 const onSubmit = async () => {
   try {
     await auth.login(username.value, password.value);
-    showToast('Login Success');
+    showToast('登录成功');
     router.push('/');
   } catch (e) {
-    showToast('Login Failed');
+    showToast('登录失败，请检查账号和密码');
   }
 };
 </script>
@@ -23,25 +23,25 @@ const onSubmit = async () => {
 <template>
   <div class="login-page">
     <div class="top-spacer"></div>
-    <h2 class="title">Log In</h2>
+    <h2 class="title">登录</h2>
     
     <van-form @submit="onSubmit" class="login-form">
       <div class="input-group">
-        <div class="input-label">Account</div>
+        <div class="input-label">账号</div>
         <input 
           v-model="username" 
           class="wechat-input" 
-          placeholder="Mobile number / ID"
+          placeholder="手机号 / 账号"
         />
       </div>
       
       <div class="input-group">
-        <div class="input-label">Password</div>
+        <div class="input-label">密码</div>
         <input 
           v-model="password" 
           type="password" 
           class="wechat-input" 
-          placeholder="Password"
+          placeholder="请输入密码"
         />
       </div>
       
@@ -53,15 +53,15 @@ const onSubmit = async () => {
           class="wechat-btn"
           :disabled="!username || !password"
         >
-          Log In
+          登录
         </van-button>
       </div>
     </van-form>
     
     <div class="bottom-links">
-      <span>Unable to Log In?</span>
+      <span>无法登录？</span>
       <span class="divider">|</span>
-      <span>More Options</span>
+      <span>更多选项</span>
     </div>
   </div>
 </template>

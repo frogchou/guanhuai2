@@ -18,8 +18,8 @@ const fetchPersonas = async () => {
     // Mocking last message for chat list appearance
     personas.value = res.data.map((p: any) => ({
       ...p,
-      lastMessage: "Click to start chatting...",
-      time: "Just now"
+      lastMessage: "点击开始聊天...",
+      time: "刚刚"
     }));
   } catch (e) {
     console.error(e);
@@ -37,7 +37,7 @@ onMounted(fetchPersonas);
 
 <template>
   <div class="page-container">
-    <van-nav-bar title="WeChat" :border="false" class="wechat-nav" />
+    <van-nav-bar title="微信" :border="false" class="wechat-nav" />
     
     <div v-if="loading" class="loading-state">
       <van-loading type="spinner" />
@@ -51,7 +51,14 @@ onMounted(fetchPersonas);
         @click="goToChat(p.id)"
       >
         <div class="avatar">
-          {{ p.name[0] }}
+          <img 
+            v-if="p.avatar_url" 
+            :src="p.avatar_url" 
+            alt="avatar" 
+          />
+          <span v-else>
+            {{ p.name && p.name.length ? p.name[0] : '' }}
+          </span>
         </div>
         <div class="chat-info">
           <div class="chat-top">
@@ -65,7 +72,7 @@ onMounted(fetchPersonas);
       </div>
       
       <div v-if="personas.length === 0" class="empty-state">
-        No conversations yet. Go to Contacts to add someone.
+        暂无会话，请前往通讯录添加联系人。
       </div>
     </div>
   </div>
@@ -116,6 +123,14 @@ onMounted(fetchPersonas);
   font-weight: bold;
   margin-right: 12px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .chat-info {

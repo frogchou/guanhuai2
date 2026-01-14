@@ -34,7 +34,7 @@ onMounted(fetchPersonas);
 <template>
   <div class="page-container">
     <van-nav-bar 
-      title="Contacts" 
+      title="通讯录" 
       class="wechat-nav"
       :border="false"
     >
@@ -47,10 +47,10 @@ onMounted(fetchPersonas);
       <!-- New Friends Mock -->
       <div class="contact-item functional-item">
         <div class="avatar orange"><van-icon name="friends" /></div>
-        <div class="name">New Friends</div>
+        <div class="name">新的朋友</div>
       </div>
       
-      <div class="group-title" v-if="personas.length > 0">Friends</div>
+      <div class="group-title" v-if="personas.length > 0">朋友</div>
       
       <div 
         v-for="p in personas" 
@@ -59,7 +59,14 @@ onMounted(fetchPersonas);
         @click="goToChat(p.id)"
       >
         <div class="avatar">
-          {{ p.name[0] }}
+          <img 
+            v-if="p.avatar_url" 
+            :src="p.avatar_url" 
+            alt="avatar" 
+          />
+          <span v-else>
+            {{ p.name && p.name.length ? p.name[0] : '' }}
+          </span>
         </div>
         <div class="info">
           <div class="name">{{ p.name }}</div>
@@ -117,10 +124,18 @@ onMounted(fetchPersonas);
   font-size: 18px;
   font-weight: bold;
   margin-right: 12px;
+  overflow: hidden;
 }
 
 .avatar.orange {
   background-color: #fa9d3b;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .info {

@@ -11,6 +11,7 @@ const auth = useAuthStore();
 const personaId = route.params.id;
 
 const messages = ref<any[]>([]);
+const persona = ref<any | null>(null);
 const isRecording = ref(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const audioChunks = ref<Blob[]>([]);
@@ -42,6 +43,18 @@ const fetchMessages = async () => {
   }
 };
 
+const fetchPersona = async () => {
+  try {
+    const res = await axios.get('/api/v1/personas/', {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    });
+    const idNum = Number(personaId);
+    persona.value = res.data.find((p: any) => p.id === idNum) || null;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const startRecording = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -55,7 +68,7 @@ const startRecording = async () => {
     mediaRecorder.value.start();
     isRecording.value = true;
   } catch (e) {
-    showToast('Microphone access denied');
+    showToast('麦克风访问被拒绝');
   }
 };
 
@@ -87,7 +100,7 @@ const stopRecording = () => {
       });
       fetchMessages(); // Refresh to get real ID and trigger backend
     } catch (e) {
-      showToast('Failed to send');
+      showToast('发送失败');
     }
   };
   
@@ -96,6 +109,7 @@ const stopRecording = () => {
 };
 
 onMounted(() => {
+  fetchPersona();
   fetchMessages();
   pollingInterval.value = setInterval(fetchMessages, 3000); // Poll every 3s
 });
@@ -110,7 +124,7 @@ onUnmounted(() => {
 <template>
   <div class="chat-layout">
     <van-nav-bar 
-      title="Chat" 
+      title="聊天" 
       left-arrow 
       @click-left="router.back()" 
       fixed 
@@ -124,15 +138,22 @@ onUnmounted(() => {
     
     <div class="messages" ref="chatContainer">
       <div v-for="msg in messages" :key="msg.id" :class="['message-row', msg.role]">
-        <!-- Avatar -->
         <div class="avatar-container" v-if="msg.role === 'assistant'">
-          <div class="avatar assistant-avatar">A</div>
+          <div class="avatar assistant-avatar">
+            <img 
+              v-if="persona && persona.avatar_url" 
+              :src="persona.avatar_url" 
+              alt="avatar" 
+            />
+            <span v-else>
+              {{ persona && persona.name && persona.name.length ? persona.name[0] : '助' }}
+            </span>
+          </div>
         </div>
         
         <div class="content-container">
-          <!-- Tone Analysis Tag -->
           <div v-if="msg.analysis && msg.role === 'assistant'" class="meta-tag">
-             Mood: {{ msg.analysis.tone }}
+             情绪：{{ msg.analysis.tone }}
           </div>
           
           <div class="bubble">
@@ -149,7 +170,7 @@ onUnmounted(() => {
         </div>
 
         <div class="avatar-container" v-if="msg.role === 'user'">
-          <div class="avatar user-avatar">Me</div>
+          <div class="avatar user-avatar">我</div>
         </div>
       </div>
     </div>
@@ -167,7 +188,7 @@ onUnmounted(() => {
         @touchstart.prevent="startRecording"
         @touchend.prevent="stopRecording"
       >
-        {{ isRecording ? 'Release to Send' : 'Hold to Speak' }}
+        {{ isRecording ? '松开发送' : '按住说话' }}
       </div>
       
       <div class="tool-icon">
@@ -230,6 +251,7 @@ onUnmounted(() => {
   justify-content: center;
   font-weight: bold;
   font-size: 14px;
+  overflow: hidden;
 }
 
 .assistant-avatar {
@@ -242,6 +264,13 @@ onUnmounted(() => {
   background-color: #2ba245; /* WeChat green */
   color: #fff;
   margin-left: 10px;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .content-container {

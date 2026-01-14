@@ -80,6 +80,9 @@ class IndexTTSClient(TTSProvider):
         """
         tts_url = f"{self.base_url}/tts"
         try:
+            # Ensure output directory exists
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
             payload = {
                 "text": text,
                 "prompt_audio_path": voice_id, # The absolute path on the server

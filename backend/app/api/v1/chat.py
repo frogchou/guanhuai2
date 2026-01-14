@@ -108,11 +108,12 @@ async def process_voice_message(
                 output_path=output_path
             )
             
-            if success:
-                asst_msg.audio_url = f"/static/audio/{output_filename}"
-                asst_msg.status = "completed"
-            else:
-                asst_msg.status = "failed"
+            asst_msg.audio_url = f"/static/audio/{output_filename}"
+            asst_msg.status = "completed"
+            if not success:
+                if asst_msg.analysis is None:
+                    asst_msg.analysis = {}
+                asst_msg.analysis["tts_status"] = "fallback"
             
             await db.commit()
             
@@ -181,6 +182,7 @@ async def send_voice_message(
     file_ext = file.filename.split(".")[-1]
     filename = f"msg_{conversation.id}_{uuid.uuid4()}.{file_ext}"
     file_path = os.path.join("static/audio", filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

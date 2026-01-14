@@ -19,8 +19,8 @@ const logout = () => {
           <van-icon name="user-o" size="30" />
         </div>
         <div class="user-info">
-          <div class="username">User</div>
-          <div class="userid">WeChat ID: wxid_123456</div>
+          <div class="username">用户名</div>
+          <div class="userid">微信号：wxid_123456</div>
         </div>
         <div class="qr-code">
           <van-icon name="qr" />
@@ -30,22 +30,22 @@ const logout = () => {
     </div>
     
     <div class="menu-group">
-      <van-cell title="Services" is-link icon="gold-coin-o" />
+      <van-cell title="服务" is-link icon="gold-coin-o" />
     </div>
     
     <div class="menu-group">
-      <van-cell title="Favorites" is-link icon="star-o" />
-      <van-cell title="Moments" is-link icon="photo-o" />
-      <van-cell title="Cards & Offers" is-link icon="coupon-o" />
-      <van-cell title="Sticker Gallery" is-link icon="smile-o" />
+      <van-cell title="收藏" is-link icon="star-o" />
+      <van-cell title="朋友圈" is-link icon="photo-o" />
+      <van-cell title="卡包" is-link icon="coupon-o" />
+      <van-cell title="表情" is-link icon="smile-o" />
     </div>
     
     <div class="menu-group">
-      <van-cell title="Settings" is-link icon="setting-o" />
+      <van-cell title="设置" is-link icon="setting-o" />
     </div>
     
     <div class="menu-group logout-group">
-      <van-cell title="Log Out" @click="logout" center style="text-align: center; color: #fa5151;" />
+      <van-cell title="退出登录" @click="logout" center style="text-align: center; color: #fa5151;" />
     </div>
   </div>
 </template>

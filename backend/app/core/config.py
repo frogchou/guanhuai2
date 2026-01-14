@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     REDIS_URL: str
     
     OPENAI_API_KEY: str = "mock"
-    INDEXTTS_BASE_URL: str = "http://mock-indextts"
+    INDEXTTS_BASE_URL: str = "http://192.168.2.252:8000"
     
     # Security & Compliance
     DAILY_VOICE_LIMIT: int = 50

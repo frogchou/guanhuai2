@@ -13,9 +13,9 @@ const router = useRouter();
     </div>
     
     <van-tabbar v-model="active" route safe-area-inset-bottom>
-      <van-tabbar-item replace to="/chats" icon="chat-o">WeChat</van-tabbar-item>
-      <van-tabbar-item replace to="/contacts" icon="friends-o">Contacts</van-tabbar-item>
-      <van-tabbar-item replace to="/me" icon="user-o">Me</van-tabbar-item>
+      <van-tabbar-item replace to="/chats" icon="chat-o">微信</van-tabbar-item>
+      <van-tabbar-item replace to="/contacts" icon="friends-o">通讯录</van-tabbar-item>
+      <van-tabbar-item replace to="/me" icon="user-o">我</van-tabbar-item>
     </van-tabbar>
   </div>
 </template>
